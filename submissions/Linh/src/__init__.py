@@ -16,6 +16,7 @@ from .embeddings import (
     _mock_embed,
 )
 from .models import Document
+from .recursive_chunking import LawRecursiveChunker
 from .store import EmbeddingStore
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "FixedSizeChunker",
     "SentenceChunker",
     "RecursiveChunker",
+    "LawRecursiveChunker",
     "ChunkingStrategyComparator",
     "compute_similarity",
     "EmbeddingStore",
