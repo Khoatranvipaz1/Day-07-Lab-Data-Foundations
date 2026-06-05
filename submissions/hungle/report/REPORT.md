@@ -1,8 +1,8 @@
 # Báo Cáo Lab 7: Embedding & Vector Store
 
-**Họ tên:** Lê Quang Hưng
-**Nhóm:** G14-155 Bàn B6
-**Ngày:** 6/2026
+**Họ tên:** [Tên sinh viên]
+**Nhóm:** [Tên nhóm]
+**Ngày:** [Ngày nộp]
 
 ---
 
@@ -41,27 +41,37 @@
 
 ### Domain & Lý Do Chọn
 
-**Domain:** [ví dụ: Customer support FAQ, Vietnamese law, cooking recipes, ...]
+**Domain:** Pháp luật Việt Nam
 
 **Tại sao nhóm chọn domain này?**
-> *Viết 2-3 câu:*
+> Nhóm chọn domain pháp luật Việt Nam vì văn bản luật có cấu trúc rõ ràng theo Chương, Điều, Khoản và Điểm, phù hợp để thử nghiệm nhiều chiến lược chunking. Bộ dữ liệu cũng chứa các chủ đề khác nhau như y tế, quân đội, phòng cháy chữa cháy, biên giới và thi đua khen thưởng, giúp đánh giá khả năng retrieval và metadata filtering trên những câu hỏi cụ thể.
 
 ### Data Inventory
 
 | # | Tên tài liệu | Nguồn | Số ký tự | Metadata đã gán |
 |---|--------------|-------|----------|-----------------|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
-| 4 | | | | |
-| 5 | | | | |
+| 1 | Luật Bảo vệ sức khỏe nhân dân | `law-1989-luat-bao-ve-suc-khoe-nhan-dan.md` (file Markdown nhóm thu thập) | 27,939 | `law_number=21-LCT/HĐNN8`, `year=1989`, `topic=health` |
+| 2 | Luật Sĩ quan Quân đội nhân dân Việt Nam | `law-1999-luat-si-quan-quan-doi-nhan-dan-viet-nam.md` (file Markdown nhóm thu thập) | 31,961 | `law_number=16/1999/QH10`, `year=1999`, `topic=military` |
+| 3 | Luật Phòng cháy và chữa cháy | `law-2001-luat-phong-chay-va-chua-chay.md` (file Markdown nhóm thu thập) | 43,459 | `law_number=27/2001/QH10`, `year=2001`, `topic=fire_safety` |
+| 4 | Luật Biên giới quốc gia | `law-2003-luat-bien-gioi-quoc-gia.md` (file Markdown nhóm thu thập) | 19,856 | `law_number=06/2003/QH11`, `year=2003`, `topic=national_border` |
+| 5 | Luật Thi đua, khen thưởng | `law-2003-luat-thi-dua-khen-thuong.md` (file Markdown nhóm thu thập) | 53,943 | `law_number=15/2003/QH11`, `year=2003`, `topic=awards` |
 
 ### Metadata Schema
 
 | Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho retrieval? |
 |----------------|------|---------------|-------------------------------|
-| | | | |
-| | | | |
+| `doc_id` | `str` | `law-2001-luat-phong-chay-va-chua-chay` | Nhóm tất cả chunk thuộc cùng một văn bản và hỗ trợ xóa theo document. |
+| `title` | `str` | `Luật Phòng cháy và chữa cháy` | Xác định tên luật chứa thông tin được retrieve. |
+| `law_number` | `str` | `27/2001/QH10` | Cho phép tìm hoặc lọc chính xác theo số hiệu văn bản. |
+| `year` | `int` | `2001` | Hỗ trợ lọc và so sánh văn bản theo năm ban hành. |
+| `topic` | `str` | `fire_safety` | Thu hẹp phạm vi search vào đúng lĩnh vực pháp luật. |
+| `document_type` | `str` | `law` | Phân biệt luật với nghị định, nghị quyết hoặc loại tài liệu khác nếu mở rộng dataset. |
+| `language` | `str` | `vi` | Hỗ trợ lọc theo ngôn ngữ khi dữ liệu có nhiều ngôn ngữ. |
+| `source_file` | `str` | `law-2001-luat-phong-chay-va-chua-chay.md` | Giúp truy vết kết quả về file nguồn để kiểm chứng. |
+| `chapter` | `str` | `Chương 1` | Giữ vị trí cấu trúc của chunk trong văn bản luật. |
+| `article` | `str` | `Điều 11` | Cho phép chỉ ra chính xác điều luật làm căn cứ cho câu trả lời. |
+| `chunk_index` | `int` | `10` | Xác định thứ tự chunk và hỗ trợ kiểm tra lại quá trình chunking. |
+| `strategy` | `str` | `by_article` | Giúp so sánh kết quả retrieval giữa các chiến lược chunking. |
 
 ---
 
@@ -119,31 +129,37 @@ Giải thích cách tiếp cận của bạn khi implement các phần chính tr
 ### Chunking Functions
 
 **`SentenceChunker.chunk`** — approach:
-> *Viết 2-3 câu: dùng regex gì để detect sentence? Xử lý edge case nào?*
+> Tôi dùng regex `(?<=[.!?])(?:\s+|\n+)` để nhận diện ranh giới câu sau các dấu `.`, `!`, `?`, sau đó loại bỏ khoảng trắng thừa và các phần rỗng. Các câu được gom theo từng nhóm có tối đa `max_sentences_per_chunk` câu; nếu đầu vào rỗng thì hàm trả về danh sách rỗng.
 
 **`RecursiveChunker.chunk` / `_split`** — approach:
-> *Viết 2-3 câu: algorithm hoạt động thế nào? Base case là gì?*
+> Thuật toán thử các separator theo thứ tự ưu tiên: đoạn văn (`\n\n`), dòng (`\n`), câu (`. `), từ (` `), rồi cuối cùng là ký tự. Base case là khi đoạn hiện tại không vượt quá `chunk_size`; nếu không còn separator phù hợp, hàm dùng `FixedSizeChunker` với overlap bằng 0 để đảm bảo văn bản vẫn được chia nhỏ.
 
 ### EmbeddingStore
 
 **`add_documents` + `search`** — approach:
-> *Viết 2-3 câu: lưu trữ thế nào? Tính similarity ra sao?*
+> `add_documents` chuyển từng `Document` thành một record gồm id, content, metadata, doc_id và embedding, sau đó lưu vào danh sách in-memory. Khi search, câu query cũng được embedding, hệ thống tính dot product giữa query embedding và từng document embedding, sắp xếp score giảm dần rồi trả về tối đa `top_k` kết quả.
 
 **`search_with_filter` + `delete_document`** — approach:
-> *Viết 2-3 câu: filter trước hay sau? Delete bằng cách nào?*
+> `search_with_filter` lọc record theo tất cả cặp key-value trong `metadata_filter` trước, sau đó mới tính similarity trên tập kết quả đã lọc. `delete_document` loại bỏ mọi record có `metadata["doc_id"]` trùng với id cần xóa và trả về `True` nếu kích thước store giảm, ngược lại trả về `False`.
 
 ### KnowledgeBaseAgent
 
 **`answer`** — approach:
-> *Viết 2-3 câu: prompt structure? Cách inject context?*
+> `answer` gọi `store.search()` để retrieve các chunk liên quan nhất, sau đó đánh số và ghép nội dung các chunk thành phần `Context` trong prompt. Prompt gồm context, câu hỏi và vị trí để sinh answer; cuối cùng agent gọi `llm_fn(prompt)`, giúp câu trả lời được tạo dựa trên dữ liệu đã retrieve.
 
 ### Test Results
 
 ```
-# Paste output of: pytest tests/ -v
+============================= test session starts =============================
+platform win32 -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0
+collected 42 items
+
+tests/test_solution.py ..........................................        [100%]
+
+============================= 42 passed in 2.53s ==============================
 ```
 
-**Số tests pass:** __ / __
+**Số tests pass:** 42 / 42
 
 ---
 
