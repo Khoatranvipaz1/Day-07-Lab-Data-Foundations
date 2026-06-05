@@ -58,28 +58,28 @@ Overlap tang lam so chunk tang tu 23 len 25 vi moi buoc truot ngan hon. Overlap 
 
 ### Domain & Ly Do Chon
 
-**Domain:** Van ban giao duc, thong tu BGDĐT va tai lieu nen tang retrieval/RAG.
+**Domain:** Van ban phap luat Viet Nam va tai lieu nen tang retrieval/RAG.
 
 **Tai sao nhom chon domain nay?**  
-Nhom chon domain nay vi tai lieu co cau truc ro rang theo thong tu, chuong, dieu va heading Markdown. Day la bo du lieu phu hop de so sanh chunking strategy: neu chunk cat sai, retrieval se mat ngu canh dieu khoan; neu metadata tot, search co the thu hep dung nguon tai lieu.
+Nhom chon domain nay vi tai lieu phap luat co cau truc ro rang theo chuong, dieu, khoan va tieu de. Day la bo du lieu phu hop de so sanh chunking strategy: neu chunk cat sai, retrieval se mat ngu canh dieu khoan; neu metadata tot, search co the thu hep dung nguon tai lieu.
 
 ### Data Inventory
 
 | # | Ten tai lieu | Nguon | So ky tu | Metadata da gan |
 |---|--------------|-------|----------|-----------------|
-| 1 | 2026_266_35_2026_TT-BGDDT.md | data/ | 306761 | source, doc_type, language |
-| 2 | 36_2026_TT-BGDDT_703627.md | data/ | 24105 | source, doc_type, language |
-| 3 | vector_store_notes.md | data/ | 2123 | source, doc_type, language |
-| 4 | rag_system_design.md | data/ | 2391 | source, doc_type, language |
-| 5 | chunking_experiment_report.md | data/ | 1987 | source, doc_type, language |
+| 1 | law-2001-luat-phong-chay-va-chua-chay.md | data/ | 58224 | source, doc_type, language |
+| 2 | law-1989-luat-bao-ve-suc-khoe-nhan-dan.md | data/ | 37844 | source, doc_type, language |
+| 3 | law-1999-luat-si-quan-quan-doi-nhan-dan-viet-nam.md | data/ | 43304 | source, doc_type, language |
+| 4 | law-2003-luat-bien-gioi-quoc-gia.md | data/ | 26666 | source, doc_type, language |
+| 5 | law-2003-luat-thi-dua-khen-thuong.md | data/ | 72089 | source, doc_type, language |
 
 ### Metadata Schema
 
 | Truong metadata | Kieu | Vi du gia tri | Tai sao huu ich cho retrieval? |
 |----------------|------|---------------|-------------------------------|
-| source | string | 36_2026_TT-BGDDT_703627.md | Biet chunk den tu file nao de trace lai evidence va loc dung thong tu. |
+| source | string | law-2001-luat-phong-chay-va-chua-chay.md | Biet chunk den tu file nao de trace lai evidence va loc dung van ban luat. |
 | language | string | vi, en | Huu ich khi query tieng Viet hoac tieng Anh can filter rieng. |
-| doc_type | string | legal, notes, report | Giam nhieu khi cau hoi chi phu hop voi van ban phap quy hoac note ky thuat. |
+| doc_type | string | legal | Giam nhieu khi cau hoi chi phu hop voi van ban phap luat. |
 
 ---
 
@@ -109,17 +109,17 @@ Chay `ChunkingStrategyComparator().compare()` voi `chunk_size=500` tren 3 tai li
 Strategy rieng cua toi tach tai lieu theo cau truc Markdown va van ban phap quy: heading `#`, `##`, cac moc `Chuong`, `Dieu`. Neu mot section van dai hon `chunk_size`, strategy fallback sang fixed-size split noi bo de khong vuot gioi han. Cach nay khac voi fixed/sentence/recursive mac dinh vi no uu tien giu tron ven mot muc dieu khoan hoac mot section tai lieu.
 
 **Tai sao toi chon strategy nay cho domain nhom?**  
-Bo tai lieu nhom co Markdown va tai lieu phap quy/thong tu, trong do thong tin quan trong thuong nam trong heading, chuong, dieu. `MarkdownSectionChunker` phu hop vi no giu duoc ngu canh cua tung muc, tranh viec query retrieve mot nua dieu khoan ma thieu tieu de hoac dieu kien ap dung.
+Bo tai lieu nhom co cac van ban luat dai, trong do thong tin quan trong thuong nam trong heading, chuong, dieu va khoan. `MarkdownSectionChunker` phu hop vi no giu duoc ngu canh cua tung muc, tranh viec query retrieve mot nua dieu khoan ma thieu tieu de hoac dieu kien ap dung.
 
 ### So Sanh: Strategy cua toi vs Baseline
 
 | Tai lieu | Strategy | Chunk Count | Avg Length | Retrieval Quality? |
 |-----------|----------|-------------|------------|--------------------|
-| chunking_experiment_report.md | best baseline: recursive 500 | 5 | 395.8 | Coherent, giu section tot |
-| chunking_experiment_report.md | cua toi: MarkdownSectionChunker 900 | 3 | 660.7 | Giu section Markdown ro hon |
-| vector_store_notes.md | cua toi: MarkdownSectionChunker 900 | 3 | 706.0 | Giu heading va noi dung lien quan trong cung chunk |
-| 36_2026_TT-BGDDT_703627.md | cua toi: MarkdownSectionChunker 900 | 27 | 891.1 | Giu cac khoi dieu/chuyen muc, phu hop van ban dai |
-| 2026_266_35_2026_TT-BGDDT.md | cua toi: MarkdownSectionChunker 900 | 341 | 889.5 | Chia van ban rat dai thanh chunk gan gioi han nhung van bam cau truc |
+| law-2001-luat-phong-chay-va-chua-chay.md | cua toi: MarkdownSectionChunker 900 | 74 | xap xi 780 | Giu cac dieu ve PCCC trong chunk rieng |
+| law-1989-luat-bao-ve-suc-khoe-nhan-dan.md | cua toi: MarkdownSectionChunker 900 | 48 | xap xi 790 | Giu dieu/khoan ve cap cuu trong chunk co ngu canh |
+| law-1999-luat-si-quan-quan-doi-nhan-dan-viet-nam.md | cua toi: MarkdownSectionChunker 900 | 56 | xap xi 770 | Giu dieu ve cap bac quan ham |
+| law-2003-luat-bien-gioi-quoc-gia.md | cua toi: MarkdownSectionChunker 900 | 23 | xap xi 840 | Giu dieu cam lien quan den moc quoc gioi |
+| law-2003-luat-thi-dua-khen-thuong.md | cua toi: MarkdownSectionChunker 900 | 61 | xap xi 820 | Giu dieu ve tham quyen khen thuong |
 
 ### So Sanh Voi Thanh Vien Khac
 
@@ -207,32 +207,32 @@ Pair 2 bat ngo nhat vi ve mat ngu nghia hai cau deu noi ve vector store/retrieva
 
 ## 6. Results - Ca nhan (10 diem)
 
-Chay 5 benchmark queries tren implementation ca nhan voi `MarkdownSectionChunker(chunk_size=900)` va mock embedding backend.
+Chay 5 benchmark queries tren implementation ca nhan voi `MarkdownSectionChunker(chunk_size=900)` va mock embedding backend. Moi query duoc filter theo metadata `source` dung van ban luat.
 
 ### Benchmark Queries & Gold Answers
 
 | # | Query | Gold Answer |
 |---|-------|-------------|
-| 1 | Thong tu 36/2026/TT-BGDDT co hieu luc tu ngay nao? | Thong tu 36 co hieu luc tu ngay 07/06/2026. |
-| 2 | Thong tu 35/2026/TT-BGDDT huong dan noi dung gi? | Thong tu 35 huong dan mot so noi dung ve hoat dong dau tu theo phuong thuc PPP trong linh vuc giao duc va dao tao. |
-| 3 | Vector search pipeline co nhung buoc nao? | Chunk documents, embed chunks, store vector+metadata, embed query va rank by similarity. |
-| 4 | RAG system giam hallucination bang cach nao? | RAG retrieve relevant context truoc, dua context vao prompt, va yeu cau model answer dua tren evidence. |
-| 5 | Recursive chunking co uu diem gi trong experiment? | Recursive chunking giu context tot hon bang cach tach theo boundary lon truoc roi moi fallback separator nho hon. |
+| 1 | Ngay toan dan phong chay va chua chay la ngay nao? | Ngay 04 thang 10 hang nam. |
+| 2 | Khi cap cuu, nguoi benh co the duoc cap cuu o dau? | Tai bat ky co so kham chua benh nao; co so phai tiep nhan va xu tri. |
+| 3 | He thong cap bac quan ham si quan gom bao nhieu cap va bac? | Ba cap, muoi hai bac. |
+| 4 | Nhung hanh vi nao lien quan den moc quoc gioi bi nghiem cam? | Xe dich, pha hoai moc hoac lam sai lech duong bien gioi. |
+| 5 | Ai quyet dinh tang huan chuong va huy chuong? | Chu tich nuoc. |
 
 ### Ket Qua Cua Toi
 
 | # | Query | Top-1 Retrieved Chunk (tom tat) | Score | Relevant? | Agent Answer (tom tat) |
 |---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | Thong tu 36 co hieu luc tu ngay nao? | Filter source dung 36_2026, top chunk chua phan gan Dieu 3/noi nhan | 0.1927 | Partly | Can inspect top-3 vi mock embedding chua rank dung Dieu 2 |
-| 2 | Thong tu 35 huong dan noi dung gi? | Filter source dung 35_2026, top chunk trong van ban TT35 | 0.3541 | Partly | Dung source nhung top chunk chua phai doan mo dau |
-| 3 | Vector search pipeline co nhung buoc nao? | vector_store_notes: mo ta vector store va workflow | -0.0010 | Yes | Co chunk dung source, answer can tom tat 4 buoc |
-| 4 | RAG system giam hallucination bang cach nao? | rag_system_design: application layer inject retrieved chunks vao prompt | 0.3596 | Yes | Co context dung ve grounding va evidence |
-| 5 | Recursive chunking co uu diem gi? | chunking_experiment_report: sentence/recursive comparison | 0.0343 | Partly | Co source dung, top chunk chua phai doan recursive tot nhat |
+| 1 | Ngay toan dan PCCC la ngay nao? | Top-1: Dieu 33 ve trach nhiem chua chay, chua phai Dieu 11 | 0.2330 | No | Chunk dung dap an xuat hien o rank 4 |
+| 2 | Khi cap cuu, nguoi benh duoc cap cuu o dau? | Top-1: Dieu 48 ve thanh tra y te, chua phai Dieu 23 | 0.2239 | No | Chunk lien quan cap cuu xuat hien o rank 9 |
+| 3 | He thong cap bac quan ham si quan? | Top-1: Dieu 43 ve si quan du bi, chua phai Dieu 10 | 0.2789 | No | Chunk co "ba cap, muoi hai bac" xuat hien o rank 19 |
+| 4 | Hanh vi lien quan moc quoc gioi bi cam? | Top-1: Dieu 14, co noi dung cam xe dich/pha hoai moc quoc gioi | 0.3198 | Yes | Retrieval dung top-1 |
+| 5 | Ai quyet dinh tang huan chuong/huy chuong? | Top-1: doan ve nha giao, chua phai Dieu 77 | 0.2718 | No | Chunk co "Chu tich nuoc quyet dinh..." xuat hien o rank 4 |
 
-**Bao nhieu queries tra ve chunk relevant trong top-3?** 3 / 5 khi dung metadata filter theo `source`. Neu khong filter, `_mock_embed` thuong day cac chunk cua van ban dai len top-3, nen precision thap hon.
+**Bao nhiêu queries trả về chunk relevant trong top-3?** 1 / 5. Neu tinh "co chunk dung trong source sau khi filter" thi 5/5 dap an deu ton tai trong indexed chunks, nhung `_mock_embed` rank sai nen chi 1 query vao top-3.
 
 **Nhan xet:**  
-Ket qua cho thay `MarkdownSectionChunker` giup chunk coherent hon voi Markdown/phap quy, nhung `_mock_embed` khong encode semantic similarity that nen ranking van nhieu nhieu. Metadata filter theo `source` rat quan trong: no thu hep search vao dung tai lieu, tang source precision tu thap len 5/5 trong benchmark nay.
+Ket qua cho thay `MarkdownSectionChunker` giup chunk coherent hon voi van ban phap luat, vi cac dieu/khoan khong bi cat qua ngan. Tuy nhien `_mock_embed` khong encode semantic similarity that nen ranking van yeu: dap an dung co trong data nhung thuong roi xuong rank 4, 9 hoac 19. Metadata filter theo `source` rat quan trong vi it nhat no dam bao search trong dung van ban luat; neu khong filter, top-k de bi nhieu boi cac van ban dai khac.
 
 ---
 
@@ -248,7 +248,7 @@ Ket qua cho thay `MarkdownSectionChunker` giup chunk coherent hon voi Markdown/p
 Toi se gan metadata chi tiet hon cho tung chunk, vi du `topic=chunking/vector_store/rag/support`, `language=en/vi`, va `doc_type=notes/playbook/report`. Toi cung se dung semantic embedder that thay vi mock embedder de benchmark retrieval quality cong bang hon.
 
 **Failure analysis:**  
-Failure ro nhat la cac query ve ngay hieu luc/noi dung thong tu: khi khong filter, top-3 thuong bi chiem boi chunk cua van ban dai `2026_266_35_2026_TT-BGDDT.md` vi mock embedding khong hieu nghia. Cach cai thien la bat buoc dung `search_with_filter(metadata_filter={"source": ...})` khi query da co so thong tu, them metadata `doc_type=legal`, `law_number`, `article`, va dung local/OpenAI embedding de ranking theo semantic tot hon.
+Failure ro nhat la query "He thong cap bac quan ham si quan gom bao nhieu cap va bac?" vi dap an "ba cap, muoi hai bac" co trong `law-1999-luat-si-quan-quan-doi-nhan-dan-viet-nam.md` nhung chi xuat hien o rank 19. Nguyen nhan khong phai do chunking lam mat dap an, ma do `_mock_embed` khong hieu ngu nghia tieng Viet va khong uu tien dung dieu khoan. Cach cai thien la them metadata `article=10`, `law_number`, dung filter theo dieu khi query co nguon ro, hoac doi sang local/OpenAI semantic embedding.
 
 ---
 
