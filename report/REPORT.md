@@ -1,8 +1,8 @@
 # Báo Cáo Lab 7: Embedding & Vector Store
 
-**Họ tên:** [Tên sinh viên]
-**Nhóm:** [Tên nhóm]
-**Ngày:** [Ngày nộp]
+**Họ tên:** Lê Quang Hưng
+**Nhóm:** G14-155 Bàn B6
+**Ngày:** 6/2026
 
 ---
 
@@ -11,7 +11,7 @@
 ### Cosine Similarity (Ex 1.1)
 
 **High cosine similarity nghĩa là gì?**
-> *Viết 1-2 câu:*
+> *Viết 1-2 câu: High cosine similarity nghĩa là hai đoạn văn bản có ý nghĩa gần nhau trong không gian embedding. Nói đơn giản, dù dùng từ khác nhau, nếu chúng nói về cùng một chủ đề hoặc cùng một ý thì điểm similarity sẽ cao.
 
 **Ví dụ HIGH similarity:**
 - Sentence A:
