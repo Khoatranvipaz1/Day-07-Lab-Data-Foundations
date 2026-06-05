@@ -74,6 +74,59 @@ class RecursiveChunker:
         raise NotImplementedError("Implement RecursiveChunker._split")
 
 
+class MarkdownSectionChunker:
+    """
+    Split markdown/legal documents by structural section markers.
+
+    This custom strategy keeps headings, "Chuong", and "Dieu" blocks together
+    when possible, then falls back to fixed-size splitting for oversized sections.
+    """
+
+    SECTION_PATTERN = re.compile(
+        r"(?m)^(?=(?:#{1,6}\s+|Ch[uư]ong\s+[IVXLCDM0-9]+|[ĐD]i[eề]u\s+\d+\.))",
+        flags=re.IGNORECASE,
+    )
+
+    def __init__(self, chunk_size: int = 900) -> None:
+        self.chunk_size = chunk_size
+
+    def chunk(self, text: str) -> list[str]:
+        if not text:
+            return []
+
+        sections = [
+            section.strip()
+            for section in self.SECTION_PATTERN.split(text.strip())
+            if section.strip()
+        ]
+        if not sections:
+            return []
+
+        chunks: list[str] = []
+        buffer = ""
+        for section in sections:
+            candidate = section if not buffer else f"{buffer}\n\n{section}"
+            if len(candidate) <= self.chunk_size:
+                buffer = candidate
+                continue
+
+            if buffer:
+                chunks.extend(self._split_oversized(buffer))
+            chunks.extend(self._split_oversized(section))
+            buffer = ""
+
+        if buffer:
+            chunks.extend(self._split_oversized(buffer))
+
+        return [chunk.strip() for chunk in chunks if chunk.strip()]
+
+    def _split_oversized(self, text: str) -> list[str]:
+        return [
+            text[start : start + self.chunk_size]
+            for start in range(0, len(text), self.chunk_size)
+        ]
+
+
 def _dot(a: list[float], b: list[float]) -> float:
     return sum(x * y for x, y in zip(a, b))
 

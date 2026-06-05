@@ -2,7 +2,7 @@
 
 **Ho ten:** Duy
 **MSSV:** 2A202600725
-**Nhom:** [Ten nhom]
+**Nhom:** Data Foundations - Education Law Docs
 **Ngay:** 05/06/2026
 
 ---
@@ -58,28 +58,28 @@ Overlap tang lam so chunk tang tu 23 len 25 vi moi buoc truot ngan hon. Overlap 
 
 ### Domain & Ly Do Chon
 
-**Domain:** [Nhom bo sung]
+**Domain:** Van ban giao duc, thong tu BGDĐT va tai lieu nen tang retrieval/RAG.
 
 **Tai sao nhom chon domain nay?**  
-[Nhom bo sung 2-3 cau ve ly do chon domain.]
+Nhom chon domain nay vi tai lieu co cau truc ro rang theo thong tu, chuong, dieu va heading Markdown. Day la bo du lieu phu hop de so sanh chunking strategy: neu chunk cat sai, retrieval se mat ngu canh dieu khoan; neu metadata tot, search co the thu hep dung nguon tai lieu.
 
 ### Data Inventory
 
 | # | Ten tai lieu | Nguon | So ky tu | Metadata da gan |
 |---|--------------|-------|----------|-----------------|
-| 1 | [Nhom bo sung] | | | |
-| 2 | [Nhom bo sung] | | | |
-| 3 | [Nhom bo sung] | | | |
-| 4 | [Nhom bo sung] | | | |
-| 5 | [Nhom bo sung] | | | |
+| 1 | 2026_266_35_2026_TT-BGDDT.md | data/ | 306761 | source, doc_type, language |
+| 2 | 36_2026_TT-BGDDT_703627.md | data/ | 24105 | source, doc_type, language |
+| 3 | vector_store_notes.md | data/ | 2123 | source, doc_type, language |
+| 4 | rag_system_design.md | data/ | 2391 | source, doc_type, language |
+| 5 | chunking_experiment_report.md | data/ | 1987 | source, doc_type, language |
 
 ### Metadata Schema
 
 | Truong metadata | Kieu | Vi du gia tri | Tai sao huu ich cho retrieval? |
 |----------------|------|---------------|-------------------------------|
-| source | string | [ten_file.md] | Biet chunk den tu file nao de trace lai evidence. |
-| language | string | en, vi | Huu ich khi query tieng Viet hoac tieng Anh can filter rieng. |
-| doc_type | string | report, playbook, notes | Giam nhieu khi cau hoi chi phu hop voi mot loai tai lieu. |
+| source | string | 36_2026_TT-BGDDT_703627.md | Biet chunk den tu file nao de trace lai evidence va loc dung thong tu. |
+| language | string | vi, en | Huu ich khi query tieng Viet hoac tieng Anh can filter rieng. |
+| doc_type | string | legal, notes, report | Giam nhieu khi cau hoi chi phu hop voi van ban phap quy hoac note ky thuat. |
 
 ---
 
@@ -103,28 +103,29 @@ Chay `ChunkingStrategyComparator().compare()` voi `chunk_size=500` tren 3 tai li
 
 ### Strategy Cua Toi
 
-**Loai:** RecursiveChunker voi `chunk_size=700`.
+**Loai:** Custom strategy - `MarkdownSectionChunker(chunk_size=900)`.
 
 **Mo ta cach hoat dong:**  
-Strategy nay uu tien tach theo boundary lon truoc nhu paragraph (`\n\n`), sau do moi fallback ve line, cau, khoang trang, va cuoi cung la cat cung theo ky tu. Neu mot piece van dai hon `chunk_size`, ham `_split` tiep tuc de quy voi separator nho hon. Cach nay giup chunk khong vuot qua gioi han nhung van co gang giu lai cau truc tu nhien cua tai lieu.
+Strategy rieng cua toi tach tai lieu theo cau truc Markdown va van ban phap quy: heading `#`, `##`, cac moc `Chuong`, `Dieu`. Neu mot section van dai hon `chunk_size`, strategy fallback sang fixed-size split noi bo de khong vuot gioi han. Cach nay khac voi fixed/sentence/recursive mac dinh vi no uu tien giu tron ven mot muc dieu khoan hoac mot section tai lieu.
 
 **Tai sao toi chon strategy nay cho domain nhom?**  
-Bo tai lieu gom markdown, note ky thuat va playbook, nen paragraph/section thuong mang mot y nghia tron ven. Recursive chunking phu hop vi no khong cat may moc theo so ky tu nhu fixed-size, nhung cung on dinh hon sentence chunking khi gap cau dai.
+Bo tai lieu nhom co Markdown va tai lieu phap quy/thong tu, trong do thong tin quan trong thuong nam trong heading, chuong, dieu. `MarkdownSectionChunker` phu hop vi no giu duoc ngu canh cua tung muc, tranh viec query retrieve mot nua dieu khoan ma thieu tieu de hoac dieu kien ap dung.
 
 ### So Sanh: Strategy cua toi vs Baseline
 
 | Tai lieu | Strategy | Chunk Count | Avg Length | Retrieval Quality? |
 |-----------|----------|-------------|------------|--------------------|
 | chunking_experiment_report.md | best baseline: recursive 500 | 5 | 395.8 | Coherent, giu section tot |
-| chunking_experiment_report.md | cua toi: recursive 700 | 4 | xap xi 500 | It chunk hon, them ngu canh cho agent |
-| customer_support_playbook.txt | best baseline: sentence | 4 | 421.0 | De doc, phu hop playbook |
-| customer_support_playbook.txt | cua toi: recursive 700 | 3 | xap xi 560 | Giu du buoc xu ly va dieu kien escalation |
+| chunking_experiment_report.md | cua toi: MarkdownSectionChunker 900 | 3 | 660.7 | Giu section Markdown ro hon |
+| vector_store_notes.md | cua toi: MarkdownSectionChunker 900 | 3 | 706.0 | Giu heading va noi dung lien quan trong cung chunk |
+| 36_2026_TT-BGDDT_703627.md | cua toi: MarkdownSectionChunker 900 | 27 | 891.1 | Giu cac khoi dieu/chuyen muc, phu hop van ban dai |
+| 2026_266_35_2026_TT-BGDDT.md | cua toi: MarkdownSectionChunker 900 | 341 | 889.5 | Chia van ban rat dai thanh chunk gan gioi han nhung van bam cau truc |
 
 ### So Sanh Voi Thanh Vien Khac
 
 | Thanh vien | Strategy | Retrieval Score (/10) | Diem manh | Diem yeu |
 |-----------|----------|----------------------|-----------|----------|
-| Toi | RecursiveChunker, chunk_size=700 | [Cap nhat sau khi chay query nhom] | Giu context tot, phu hop mixed docs | Can semantic embedder de danh gia chat luong that |
+| Toi | MarkdownSectionChunker, chunk_size=900 | [Cap nhat sau khi chay query nhom] | Giu heading/chuong/dieu, phu hop Markdown va van ban phap quy | Neu section qua dai van phai fallback cat nho |
 | [Thanh vien] | [Nhom bo sung] | | | |
 | [Thanh vien] | [Nhom bo sung] | | | |
 
@@ -142,6 +143,9 @@ Toi dung regex `(?<=[.!?])\s+` de tach cau sau dau `.`, `!`, `?` va cac khoang t
 
 **`RecursiveChunker.chunk` / `_split` - approach:**  
 Ham `chunk` goi `_split` voi danh sach separators uu tien. Base case la text da ngan hon `chunk_size` thi tra ve ngay, hoac het separator thi cat cung bang `chunk_size`. Khi split theo mot separator, toi gom cac piece vao buffer cho den khi candidate vuot size, sau do flush buffer va de quy tiep neu piece con qua dai.
+
+**`MarkdownSectionChunker.chunk` - custom strategy:**  
+Toi them strategy rieng de split theo heading Markdown va cac moc phap quy nhu `Chuong`, `Dieu`. Strategy nay gom cac section lien tiep neu tong do dai con duoi `chunk_size`; neu section qua dai thi fallback bang fixed-size split noi bo. Muc tieu la giu tieu de va noi dung dieu khoan trong cung chunk de retrieval de trace hon.
 
 ### EmbeddingStore
 
@@ -203,32 +207,32 @@ Pair 2 bat ngo nhat vi ve mat ngu nghia hai cau deu noi ve vector store/retrieva
 
 ## 6. Results - Ca nhan (10 diem)
 
-Chay 5 benchmark queries tren implementation ca nhan voi `RecursiveChunker(chunk_size=700)` va mock embedding backend.
+Chay 5 benchmark queries tren implementation ca nhan voi `MarkdownSectionChunker(chunk_size=900)` va mock embedding backend.
 
 ### Benchmark Queries & Gold Answers
 
 | # | Query | Gold Answer |
 |---|-------|-------------|
-| 1 | What is chunking and why is overlap useful? | Chunking splits documents into retrievable pieces; overlap preserves context across boundaries. |
-| 2 | How does a vector store search for relevant documents? | It embeds documents and query, then ranks stored vectors by similarity. |
-| 3 | What are the steps in a basic RAG system? | Retrieve relevant chunks, place them into context, then generate an answer grounded in that context. |
-| 4 | How should customer support handle refunds or escalations? | Follow support playbook steps such as checking policy/order context and escalating when needed. |
-| 5 | What challenge appears in Vietnamese retrieval? | Vietnamese retrieval can be affected by tokenization, diacritics, and language-specific matching. |
+| 1 | Thong tu 36/2026/TT-BGDDT co hieu luc tu ngay nao? | Thong tu 36 co hieu luc tu ngay 07/06/2026. |
+| 2 | Thong tu 35/2026/TT-BGDDT huong dan noi dung gi? | Thong tu 35 huong dan mot so noi dung ve hoat dong dau tu theo phuong thuc PPP trong linh vuc giao duc va dao tao. |
+| 3 | Vector search pipeline co nhung buoc nao? | Chunk documents, embed chunks, store vector+metadata, embed query va rank by similarity. |
+| 4 | RAG system giam hallucination bang cach nao? | RAG retrieve relevant context truoc, dua context vao prompt, va yeu cau model answer dua tren evidence. |
+| 5 | Recursive chunking co uu diem gi trong experiment? | Recursive chunking giu context tot hon bang cach tach theo boundary lon truoc roi moi fallback separator nho hon. |
 
 ### Ket Qua Cua Toi
 
 | # | Query | Top-1 Retrieved Chunk (tom tat) | Score | Relevant? | Agent Answer (tom tat) |
 |---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | What is chunking and why is overlap useful? | python_intro: noi ve project structure, khong phai chunking | 0.2597 | No | Tra loi theo question nhung context top-1 yeu |
-| 2 | How does a vector store search for relevant documents? | vi_retrieval_notes: noi ve retrieval failure | 0.2152 | Partly | Co lien quan retrieval nhung khong dung gold answer |
-| 3 | What are the steps in a basic RAG system? | customer_support_playbook: review failed queries | 0.1993 | No | Context khong du de tra loi kien truc RAG |
-| 4 | How should customer support handle refunds or escalations? | chunking_experiment_report: noi ve recursive chunking | 0.2910 | No | Retrieval sai domain |
-| 5 | What challenge appears in Vietnamese retrieval? | python_intro: noi ve Python production | 0.2459 | No | Retrieval sai tai lieu |
+| 1 | Thong tu 36 co hieu luc tu ngay nao? | Filter source dung 36_2026, top chunk chua phan gan Dieu 3/noi nhan | 0.1927 | Partly | Can inspect top-3 vi mock embedding chua rank dung Dieu 2 |
+| 2 | Thong tu 35 huong dan noi dung gi? | Filter source dung 35_2026, top chunk trong van ban TT35 | 0.3541 | Partly | Dung source nhung top chunk chua phai doan mo dau |
+| 3 | Vector search pipeline co nhung buoc nao? | vector_store_notes: mo ta vector store va workflow | -0.0010 | Yes | Co chunk dung source, answer can tom tat 4 buoc |
+| 4 | RAG system giam hallucination bang cach nao? | rag_system_design: application layer inject retrieved chunks vao prompt | 0.3596 | Yes | Co context dung ve grounding va evidence |
+| 5 | Recursive chunking co uu diem gi? | chunking_experiment_report: sentence/recursive comparison | 0.0343 | Partly | Co source dung, top chunk chua phai doan recursive tot nhat |
 
-**Bao nhieu queries tra ve chunk relevant trong top-3?** 1 / 5
+**Bao nhieu queries tra ve chunk relevant trong top-3?** 3 / 5 khi dung metadata filter theo `source`. Neu khong filter, `_mock_embed` thuong day cac chunk cua van ban dai len top-3, nen precision thap hon.
 
 **Nhan xet:**  
-Ket qua thap chu yeu do backend `_mock_embed` khong encode semantic similarity that. Phan code search, filter va delete da pass tests, nhung retrieval quality that can dung local embedder hoac OpenAI embedder de vector co y nghia hon.
+Ket qua cho thay `MarkdownSectionChunker` giup chunk coherent hon voi Markdown/phap quy, nhung `_mock_embed` khong encode semantic similarity that nen ranking van nhieu nhieu. Metadata filter theo `source` rat quan trong: no thu hep search vao dung tai lieu, tang source precision tu thap len 5/5 trong benchmark nay.
 
 ---
 
@@ -244,7 +248,7 @@ Ket qua thap chu yeu do backend `_mock_embed` khong encode semantic similarity t
 Toi se gan metadata chi tiet hon cho tung chunk, vi du `topic=chunking/vector_store/rag/support`, `language=en/vi`, va `doc_type=notes/playbook/report`. Toi cung se dung semantic embedder that thay vi mock embedder de benchmark retrieval quality cong bang hon.
 
 **Failure analysis:**  
-Failure ro nhat la query "How should customer support handle refunds or escalations?" nhung top-1 lai den tu `chunking_experiment_report.md`. Nguyen nhan la mock embedding khong hieu nghia va metadata chua loc theo `doc_type=playbook`. Cach cai thien la dung `search_with_filter(metadata_filter={"source": "customer_support_playbook.txt"})` hoac gan metadata `department=support`, dong thoi chay local/OpenAI embedding.
+Failure ro nhat la cac query ve ngay hieu luc/noi dung thong tu: khi khong filter, top-3 thuong bi chiem boi chunk cua van ban dai `2026_266_35_2026_TT-BGDDT.md` vi mock embedding khong hieu nghia. Cach cai thien la bat buoc dung `search_with_filter(metadata_filter={"source": ...})` khi query da co so thong tu, them metadata `doc_type=legal`, `law_number`, `article`, va dung local/OpenAI embedding de ranking theo semantic tot hon.
 
 ---
 
