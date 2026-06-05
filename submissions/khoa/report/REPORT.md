@@ -1,6 +1,7 @@
 # Báo Cáo Lab 7: Embedding & Vector Store
 
-**Họ tên:** Trần Vũ Khoa  
+**Họ tên:** Trần Văn Khoa  
+**MSV:** 2A202600827  
 **Nhóm:** Nhóm benchmark văn bản luật Việt Nam  
 **Ngày:** 05/06/2026
 
