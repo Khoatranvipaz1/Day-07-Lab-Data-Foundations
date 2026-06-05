@@ -11,29 +11,32 @@
 ### Cosine Similarity (Ex 1.1)
 
 **High cosine similarity nghĩa là gì?**
-> *Viết 1-2 câu: High cosine similarity nghĩa là hai đoạn văn bản có ý nghĩa gần nhau trong không gian embedding. Nói đơn giản, dù dùng từ khác nhau, nếu chúng nói về cùng một chủ đề hoặc cùng một ý thì điểm similarity sẽ cao.
+> High cosine similarity nghĩa là hai đoạn văn bản có vector embedding gần cùng hướng, cho thấy nội dung hoặc ý nghĩa của chúng tương đồng. Hai câu không nhất thiết phải dùng chính xác cùng từ ngữ nhưng vẫn có thể đạt similarity cao nếu cùng diễn đạt một ý.
 
 **Ví dụ HIGH similarity:**
-- Sentence A:
-- Sentence B:
-- Tại sao tương đồng:
+- Sentence A: Người bệnh trong trường hợp cấp cứu được tiếp nhận tại bất kỳ cơ sở khám chữa bệnh nào.
+- Sentence B: Khi có tình trạng khẩn cấp, bệnh nhân có thể đến mọi cơ sở y tế để được cấp cứu.
+- Tại sao tương đồng: Hai câu sử dụng từ ngữ khác nhau nhưng đều nói về quyền được cấp cứu tại bất kỳ cơ sở y tế nào.
 
 **Ví dụ LOW similarity:**
-- Sentence A:
-- Sentence B:
-- Tại sao khác:
+- Sentence A: Ngày toàn dân phòng cháy và chữa cháy là ngày 04 tháng 10.
+- Sentence B: Hệ thống cấp bậc quân hàm sĩ quan gồm ba cấp và mười hai bậc.
+- Tại sao khác: Một câu nói về phòng cháy chữa cháy, còn câu kia nói về cấp bậc quân hàm, nên chúng thuộc hai chủ đề pháp luật khác nhau.
 
 **Tại sao cosine similarity được ưu tiên hơn Euclidean distance cho text embeddings?**
-> *Viết 1-2 câu:*
+> Cosine similarity tập trung vào góc giữa hai vector, tức hướng biểu diễn ý nghĩa, thay vì khoảng cách tuyệt đối hoặc độ dài vector. Vì vậy, nó phù hợp để so sánh hai văn bản có độ dài khác nhau nhưng vẫn diễn đạt nội dung tương tự.
 
 ### Chunking Math (Ex 1.2)
 
 **Document 10,000 ký tự, chunk_size=500, overlap=50. Bao nhiêu chunks?**
-> *Trình bày phép tính:*
-> *Đáp án:*
+> Công thức: `num_chunks = ceil((doc_length - overlap) / (chunk_size - overlap))`
+>
+> Thay số: `ceil((10,000 - 50) / (500 - 50)) = ceil(9,950 / 450) = ceil(22.11) = 23`.
+>
+> **Đáp án: 23 chunks.**
 
 **Nếu overlap tăng lên 100, chunk count thay đổi thế nào? Tại sao muốn overlap nhiều hơn?**
-> *Viết 1-2 câu:*
+> Khi overlap bằng 100, số chunk là `ceil((10,000 - 100) / (500 - 100)) = ceil(9,900 / 400) = ceil(24.75) = 25 chunks`. Số chunk tăng từ 23 lên 25 vì bước nhảy giữa hai chunk giảm; overlap lớn hơn giúp giữ ngữ cảnh ở vị trí cắt nhưng đồng thời làm tăng dữ liệu trùng lặp và chi phí lưu trữ, tìm kiếm.
 
 ---
 
@@ -83,42 +86,49 @@ Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
 
 | Tài liệu | Strategy | Chunk Count | Avg Length | Preserves Context? |
 |-----------|----------|-------------|------------|-------------------|
-| | FixedSizeChunker (`fixed_size`) | | | |
-| | SentenceChunker (`by_sentences`) | | | |
-| | RecursiveChunker (`recursive`) | | | |
+| Luật Phòng cháy và chữa cháy | FixedSizeChunker (`fixed_size`) | 97 | 497.52 | Một số chunk bị cắt giữa Điều hoặc Khoản |
+| Luật Phòng cháy và chữa cháy | SentenceChunker (`by_sentences`) | 146 | 295.37 | Giữ trọn câu nhưng có thể tách một Điều thành nhiều chunk |
+| Luật Phòng cháy và chữa cháy | RecursiveChunker (`recursive`) | 106 | 407.87 | Giữ cấu trúc đoạn tốt hơn fixed-size |
+| Luật Biên giới quốc gia | FixedSizeChunker (`fixed_size`) | 45 | 490.13 | Có thể mất tiêu đề Điều tại điểm cắt |
+| Luật Biên giới quốc gia | SentenceChunker (`by_sentences`) | 49 | 402.57 | Giữ trọn câu, kích thước chunk không đều |
+| Luật Biên giới quốc gia | RecursiveChunker (`recursive`) | 51 | 387.27 | Khá tốt, ưu tiên ranh giới đoạn và câu |
+| Luật Thi đua, khen thưởng | FixedSizeChunker (`fixed_size`) | 120 | 499.11 | Ổn định kích thước nhưng đôi lúc cắt ngang ý |
+| Luật Thi đua, khen thưởng | SentenceChunker (`by_sentences`) | 126 | 425.61 | Dễ đọc nhưng một Điều dài có thể bị phân tách |
+| Luật Thi đua, khen thưởng | RecursiveChunker (`recursive`) | 131 | 409.69 | Giữ ngữ cảnh tự nhiên tốt hơn fixed-size |
 
 ### Strategy Của Tôi
 
-**Loại:** [FixedSizeChunker / SentenceChunker / RecursiveChunker / custom strategy]
+**Loại:** `FixedSizeChunker(chunk_size=500, overlap=50)`
 
 **Mô tả cách hoạt động:**
-> *Viết 3-4 câu: strategy chunk thế nào? Dựa trên dấu hiệu gì?*
+> Strategy chia văn bản thành các đoạn có tối đa 500 ký tự. Mỗi chunk mới bắt đầu sau 450 ký tự, vì 50 ký tự cuối của chunk trước được lặp lại làm overlap. Cách chia không phụ thuộc vào ranh giới Chương, Điều hoặc câu, nên kích thước chunk ổn định nhưng có thể cắt ngang cấu trúc pháp luật.
 
 **Tại sao tôi chọn strategy này cho domain nhóm?**
-> *Viết 2-3 câu: domain có pattern gì mà strategy khai thác?*
+> Tôi chọn FixedSizeChunker làm baseline đơn giản để đánh giá ảnh hưởng của việc cắt thuần theo kích thước đối với văn bản luật. Overlap 50 ký tự giúp giảm nguy cơ mất hoàn toàn ngữ cảnh ở điểm cắt, đồng thời cấu hình này dễ so sánh với SentenceChunker, RecursiveChunker và strategy custom theo Điều của các thành viên khác.
 
 **Code snippet (nếu custom):**
 ```python
-# Paste implementation here
+# Không dùng custom strategy
+chunker = FixedSizeChunker(chunk_size=500, overlap=50)
 ```
 
 ### So Sánh: Strategy của tôi vs Baseline
 
 | Tài liệu | Strategy | Chunk Count | Avg Length | Retrieval Quality? |
 |-----------|----------|-------------|------------|--------------------|
-| | best baseline | | | |
-| | **của tôi** | | | |
+| 5 văn bản luật | **FixedSizeChunker của tôi** | 395 | khoảng 496 | Gold evidence xuất hiện trong top-3 ở 5/5 query khi dùng metadata filter cho query mơ hồ |
+| 3 văn bản baseline | RecursiveChunker | 288 | khoảng 402 | Chunk coherent hơn; cần chạy cùng benchmark của nhóm để so sánh retrieval trực tiếp |
 
 ### So Sánh Với Thành Viên Khác
 
 | Thành viên | Strategy | Retrieval Score (/10) | Điểm mạnh | Điểm yếu |
 |-----------|----------|----------------------|-----------|----------|
-| Tôi | | | | |
+| Tôi | FixedSizeChunker (500/50) | 8/10 | Kích thước ổn định, triển khai đơn giản, 5/5 query có evidence trong top-3 khi filter đúng | Có thể cắt giữa Điều; một đáp án chỉ ở top-3 và agent thiếu chi tiết ở query mơ hồ |
 | [Tên] | | | | |
 | [Tên] | | | | |
 
 **Strategy nào tốt nhất cho domain này? Tại sao?**
-> *Viết 2-3 câu:*
+> Chưa thể kết luận strategy tốt nhất trước khi nhận kết quả benchmark của các thành viên khác trên cùng 5 query. Dự đoán strategy chunk theo Điều hoặc RecursiveChunker sẽ giữ cấu trúc pháp luật tốt hơn FixedSizeChunker, nhưng kết luận cuối cùng phải dựa trên bảng so sánh top-3 của cả nhóm.
 
 ---
 
@@ -186,23 +196,25 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 
 | # | Query | Gold Answer |
 |---|-------|-------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | Ngày toàn dân phòng cháy và chữa cháy là ngày nào? | Ngày 04 tháng 10 hằng năm. |
+| 2 | Khi cấp cứu, người bệnh có thể được cấp cứu ở đâu? | Tại bất kỳ cơ sở khám bệnh, chữa bệnh nào. |
+| 3 | Hệ thống cấp bậc quân hàm sĩ quan gồm bao nhiêu cấp và bậc? | Gồm ba cấp và mười hai bậc. |
+| 4 | Các hành vi bị nghiêm cấm gồm những gì? | Trong phạm vi Luật Biên giới quốc gia: xê dịch, phá hoại mốc quốc giới hoặc làm sai lệch đường biên giới quốc gia. |
+| 5 | Ai quyết định tặng huân chương và huy chương? | Chủ tịch nước. |
 
 ### Kết Quả Của Tôi
 
 | # | Query | Top-1 Retrieved Chunk (tóm tắt) | Score | Relevant? | Agent Answer (tóm tắt) |
 |---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+| 1 | Ngày toàn dân phòng cháy và chữa cháy là ngày nào? | Luật PCCC, chunk 13, chứa Điều 11 và ngày 04/10 | 0.6027 | Có | Trả lời đúng: ngày 04 tháng 10 hằng năm |
+| 2 | Khi cấp cứu, người bệnh có thể được cấp cứu ở đâu? | Luật Bảo vệ sức khỏe nhân dân, chunk 29, chứa Điều 23 | 0.3452 | Có | Trả lời đúng: tại bất kỳ cơ sở khám bệnh, chữa bệnh nào |
+| 3 | Hệ thống cấp bậc quân hàm sĩ quan gồm bao nhiêu cấp và bậc? | Top-1 nói về khái niệm phong/thăng quân hàm; gold evidence nằm ở top-3, chunk 12 | 0.6731 | Không ở top-1, có ở top-3 | Trả lời đúng: ba cấp, mười hai bậc |
+| 4 | Các hành vi bị nghiêm cấm gồm những gì? | Sau filter `topic=national_border`, chunk 18 của Luật Biên giới quốc gia chứa Điều 14 | 0.1864 | Có sau filter | Answer còn thiếu chi tiết; retrieval đã tìm đúng đoạn về phá hoại mốc quốc giới |
+| 5 | Ai quyết định tặng huân chương và huy chương? | Luật Thi đua, khen thưởng, chunk 97, chứa Điều 77 | 0.4497 | Có | Trả lời đúng: Chủ tịch nước |
 
-**Bao nhiêu queries trả về chunk relevant trong top-3?** __ / 5
+**Bao nhiêu queries trả về chunk relevant trong top-3?** 5 / 5 khi áp dụng metadata filter `topic=national_border` cho query số 4; nếu không filter thì 4 / 5.
+
+**Embedding dùng cho benchmark:** lexical hash embedding không cần dependency ngoài. `_mock_embed` mặc định chỉ kiểm tra pipeline và cho kết quả 0/5 trên bộ câu hỏi tiếng Việt vì không biểu diễn quan hệ ngữ nghĩa.
 
 ---
 
